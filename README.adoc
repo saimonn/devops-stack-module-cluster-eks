@@ -1,3 +1,19 @@
 = devops-stack-module-cluster-eks
 
 A https://devops-stack.io/[DevOps Stack] module to deploy and configure an EKS cluster on Amazon Web Services.
+
+== Technical Reference
+
+=== Dependencies
+
+// BEGIN_TF_DOCS
+// END_TF_DOCS
+
+=== Reference in table format 
+
+.Show tables
+[%collapsible]
+====
+// BEGIN_TF_TABLES
+// END_TF_TABLES
+====
