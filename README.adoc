@@ -7,6 +7,293 @@ A https://devops-stack.io/[DevOps Stack] module to deploy and configure an EKS c
 === Dependencies
 
 // BEGIN_TF_DOCS
+=== Requirements
+
+The following requirements are needed by this module:
+
+- [[requirement_terraform]] <<requirement_terraform,terraform>> (>= 0.13)
+
+- [[requirement_aws]] <<requirement_aws,aws>> (~> 3.37)
+
+- [[requirement_helm]] <<requirement_helm,helm>> (~> 2.0)
+
+- [[requirement_kubernetes]] <<requirement_kubernetes,kubernetes>> (~> 2.0)
+
+- [[requirement_local]] <<requirement_local,local>> (~> 2.0)
+
+- [[requirement_null]] <<requirement_null,null>> (~> 3.0)
+
+- [[requirement_random]] <<requirement_random,random>> (~> 3.0)
+
+=== Providers
+
+The following providers are used by this module:
+
+- [[provider_aws]] <<provider_aws,aws>> (~> 3.37)
+
+- [[provider_dns]] <<provider_dns,dns>>
+
+=== Modules
+
+The following Modules are called:
+
+==== [[module_cluster]] <<module_cluster,cluster>>
+
+Source: terraform-aws-modules/eks/aws
+
+Version: ~>18.0
+
+==== [[module_iam_assumable_role_cluster_autoscaler]] <<module_iam_assumable_role_cluster_autoscaler,iam_assumable_role_cluster_autoscaler>>
+
+Source: terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc
+
+Version: 4.0.0
+
+==== [[module_nlb]] <<module_nlb,nlb>>
+
+Source: terraform-aws-modules/alb/aws
+
+Version: 6.0.0
+
+==== [[module_nlb_private]] <<module_nlb_private,nlb_private>>
+
+Source: terraform-aws-modules/alb/aws
+
+Version: 5.10.0
+
+=== Resources
+
+The following resources are used by this module:
+
+- https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy[aws_iam_policy.cluster_autoscaler] (resource)
+- https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record[aws_route53_record.wildcard] (resource)
+- https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster_auth[aws_eks_cluster_auth.cluster] (data source)
+- https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document[aws_iam_policy_document.cluster_autoscaler] (data source)
+- https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region[aws_region.current] (data source)
+- https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/route53_zone[aws_route53_zone.this] (data source)
+- https://registry.terraform.io/providers/hashicorp/dns/latest/docs/data-sources/a_record_set[dns_a_record_set.nlb] (data source)
+
+=== Required Inputs
+
+The following input variables are required:
+
+==== [[input_cluster_name]] <<input_cluster_name,cluster_name>>
+
+Description: n/a
+
+Type: `string`
+
+==== [[input_private_subnet_ids]] <<input_private_subnet_ids,private_subnet_ids>>
+
+Description: List of IDs of private subnets that the EKS instances will be attached to.
+
+Type: `list(string)`
+
+==== [[input_vpc_cidr_block]] <<input_vpc_cidr_block,vpc_cidr_block>>
+
+Description: n/a
+
+Type: `string`
+
+==== [[input_vpc_id]] <<input_vpc_id,vpc_id>>
+
+Description: VPC where the cluster and nodes will be deployed.
+
+Type: `string`
+
+=== Optional Inputs
+
+The following input variables are optional (have default values):
+
+==== [[input_aws_auth_accounts]] <<input_aws_auth_accounts,aws_auth_accounts>>
+
+Description: Additional AWS account numbers to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+
+Type: `list(string)`
+
+Default: `[]`
+
+==== [[input_aws_auth_roles]] <<input_aws_auth_roles,aws_auth_roles>>
+
+Description: Additional IAM roles to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+
+Type:
+[source,hcl]
+----
+list(object({
+    rolearn  = string
+    username = string
+    groups   = list(string)
+  }))
+----
+
+Default: `[]`
+
+==== [[input_aws_auth_users]] <<input_aws_auth_users,aws_auth_users>>
+
+Description: Additional IAM users to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+
+Type:
+[source,hcl]
+----
+list(object({
+    userarn  = string
+    username = string
+    groups   = list(string)
+  }))
+----
+
+Default: `[]`
+
+==== [[input_base_domain]] <<input_base_domain,base_domain>>
+
+Description: The base domain used for Ingresses.
+
+Type: `string`
+
+Default: `null`
+
+==== [[input_cluster_autoscaler_role_arn]] <<input_cluster_autoscaler_role_arn,cluster_autoscaler_role_arn>>
+
+Description: Role ARN linked to the cluster autoscaler ServiceAccount
+
+Type: `string`
+
+Default: `""`
+
+==== [[input_cluster_endpoint_public_access_cidrs]] <<input_cluster_endpoint_public_access_cidrs,cluster_endpoint_public_access_cidrs>>
+
+Description: List of CIDR blocks which can access the Amazon EKS public API server endpoint.
+
+Type: `list(string)`
+
+Default:
+[source,json]
+----
+[
+  "0.0.0.0/0"
+]
+----
+
+==== [[input_create_private_nlb]] <<input_create_private_nlb,create_private_nlb>>
+
+Description: Whether to create an internal NLB attached the private subnets
+
+Type: `bool`
+
+Default: `false`
+
+==== [[input_create_public_nlb]] <<input_create_public_nlb,create_public_nlb>>
+
+Description: Whether to create an internet-facing NLB attached to the public subnets
+
+Type: `bool`
+
+Default: `true`
+
+==== [[input_enable_cluster_autoscaler]] <<input_enable_cluster_autoscaler,enable_cluster_autoscaler>>
+
+Description: Whether to setup a cluster autoscaler
+
+Type: `bool`
+
+Default: `false`
+
+==== [[input_extra_lb_http_tcp_listeners]] <<input_extra_lb_http_tcp_listeners,extra_lb_http_tcp_listeners>>
+
+Description: Additional load-balancer listeners
+
+Type: `list(any)`
+
+Default: `[]`
+
+==== [[input_extra_lb_target_groups]] <<input_extra_lb_target_groups,extra_lb_target_groups>>
+
+Description: Additional load-balancer target groups
+
+Type: `list(any)`
+
+Default: `[]`
+
+==== [[input_kubernetes_version]] <<input_kubernetes_version,kubernetes_version>>
+
+Description: Kubernetes version to use for the EKS cluster.
+
+Type: `string`
+
+Default: `"1.21"`
+
+==== [[input_nlb_attached_node_groups]] <<input_nlb_attached_node_groups,nlb_attached_node_groups>>
+
+Description: List of node_groups indexes that the NLB(s) should be attached to
+
+Type: `list`
+
+Default: `[]`
+
+==== [[input_node_groups]] <<input_node_groups,node_groups>>
+
+Description: A map of node group configurations to be created.
+
+Type: `any`
+
+Default: `{}`
+
+==== [[input_public_subnet_ids]] <<input_public_subnet_ids,public_subnet_ids>>
+
+Description: List of IDs of public subnets the public NLB will be attached to if enabled with 'create_public_nlb'.
+
+Type: `list(string)`
+
+Default: `[]`
+
+=== Outputs
+
+The following outputs are exported:
+
+==== [[output_base_domain]] <<output_base_domain,base_domain>>
+
+Description: n/a
+
+==== [[output_cluster_id]] <<output_cluster_id,cluster_id>>
+
+Description: The name/id of the EKS cluster. Will block on cluster creation until the cluster is really ready
+
+==== [[output_cluster_name]] <<output_cluster_name,cluster_name>>
+
+Description: n/a
+
+==== [[output_cluster_oidc_issuer_url]] <<output_cluster_oidc_issuer_url,cluster_oidc_issuer_url>>
+
+Description: The URL on the EKS cluster OIDC Issuer
+
+==== [[output_kubernetes]] <<output_kubernetes,kubernetes>>
+
+Description: n/a
+
+==== [[output_kubernetes_cluster_ca_certificate]] <<output_kubernetes_cluster_ca_certificate,kubernetes_cluster_ca_certificate>>
+
+Description: n/a
+
+==== [[output_kubernetes_host]] <<output_kubernetes_host,kubernetes_host>>
+
+Description: n/a
+
+==== [[output_kubernetes_token]] <<output_kubernetes_token,kubernetes_token>>
+
+Description: n/a
+
+==== [[output_nlb_target_groups]] <<output_nlb_target_groups,nlb_target_groups>>
+
+Description: n/a
+
+==== [[output_node_groups]] <<output_node_groups,node_groups>>
+
+Description: Security group ID attached to the EKS nodes.
+
+==== [[output_node_security_group_id]] <<output_node_security_group_id,node_security_group_id>>
+
+Description: n/a
 // END_TF_DOCS
 
 === Reference in table format 
@@ -15,5 +302,219 @@ A https://devops-stack.io/[DevOps Stack] module to deploy and configure an EKS c
 [%collapsible]
 ====
 // BEGIN_TF_TABLES
+= Requirements
+
+[cols="a,a",options="header,autowidth"]
+|===
+|Name |Version
+|[[requirement_terraform]] <<requirement_terraform,terraform>> |>= 0.13
+|[[requirement_aws]] <<requirement_aws,aws>> |~> 3.37
+|[[requirement_helm]] <<requirement_helm,helm>> |~> 2.0
+|[[requirement_kubernetes]] <<requirement_kubernetes,kubernetes>> |~> 2.0
+|[[requirement_local]] <<requirement_local,local>> |~> 2.0
+|[[requirement_null]] <<requirement_null,null>> |~> 3.0
+|[[requirement_random]] <<requirement_random,random>> |~> 3.0
+|===
+
+= Providers
+
+[cols="a,a",options="header,autowidth"]
+|===
+|Name |Version
+|[[provider_aws]] <<provider_aws,aws>> |~> 3.37
+|[[provider_dns]] <<provider_dns,dns>> |n/a
+|===
+
+= Modules
+
+[cols="a,a,a",options="header,autowidth"]
+|===
+|Name |Source |Version
+|[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~>18.0
+|[[module_iam_assumable_role_cluster_autoscaler]] <<module_iam_assumable_role_cluster_autoscaler,iam_assumable_role_cluster_autoscaler>> |terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc |4.0.0
+|[[module_nlb]] <<module_nlb,nlb>> |terraform-aws-modules/alb/aws |6.0.0
+|[[module_nlb_private]] <<module_nlb_private,nlb_private>> |terraform-aws-modules/alb/aws |5.10.0
+|===
+
+= Resources
+
+[cols="a,a",options="header,autowidth"]
+|===
+|Name |Type
+|https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy[aws_iam_policy.cluster_autoscaler] |resource
+|https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record[aws_route53_record.wildcard] |resource
+|https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster_auth[aws_eks_cluster_auth.cluster] |data source
+|https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document[aws_iam_policy_document.cluster_autoscaler] |data source
+|https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region[aws_region.current] |data source
+|https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/route53_zone[aws_route53_zone.this] |data source
+|https://registry.terraform.io/providers/hashicorp/dns/latest/docs/data-sources/a_record_set[dns_a_record_set.nlb] |data source
+|===
+
+= Inputs
+
+[cols="a,a,a,a,a",options="header,autowidth"]
+|===
+|Name |Description |Type |Default |Required
+|[[input_aws_auth_accounts]] <<input_aws_auth_accounts,aws_auth_accounts>>
+|Additional AWS account numbers to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+|`list(string)`
+|`[]`
+|no
+
+|[[input_aws_auth_roles]] <<input_aws_auth_roles,aws_auth_roles>>
+|Additional IAM roles to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+|
+
+[source]
+----
+list(object({
+    rolearn  = string
+    username = string
+    groups   = list(string)
+  }))
+----
+
+|`[]`
+|no
+
+|[[input_aws_auth_users]] <<input_aws_auth_users,aws_auth_users>>
+|Additional IAM users to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+|
+
+[source]
+----
+list(object({
+    userarn  = string
+    username = string
+    groups   = list(string)
+  }))
+----
+
+|`[]`
+|no
+
+|[[input_base_domain]] <<input_base_domain,base_domain>>
+|The base domain used for Ingresses.
+|`string`
+|`null`
+|no
+
+|[[input_cluster_autoscaler_role_arn]] <<input_cluster_autoscaler_role_arn,cluster_autoscaler_role_arn>>
+|Role ARN linked to the cluster autoscaler ServiceAccount
+|`string`
+|`""`
+|no
+
+|[[input_cluster_endpoint_public_access_cidrs]] <<input_cluster_endpoint_public_access_cidrs,cluster_endpoint_public_access_cidrs>>
+|List of CIDR blocks which can access the Amazon EKS public API server endpoint.
+|`list(string)`
+|
+
+[source]
+----
+[
+  "0.0.0.0/0"
+]
+----
+
+|no
+
+|[[input_cluster_name]] <<input_cluster_name,cluster_name>>
+|n/a
+|`string`
+|n/a
+|yes
+
+|[[input_create_private_nlb]] <<input_create_private_nlb,create_private_nlb>>
+|Whether to create an internal NLB attached the private subnets
+|`bool`
+|`false`
+|no
+
+|[[input_create_public_nlb]] <<input_create_public_nlb,create_public_nlb>>
+|Whether to create an internet-facing NLB attached to the public subnets
+|`bool`
+|`true`
+|no
+
+|[[input_enable_cluster_autoscaler]] <<input_enable_cluster_autoscaler,enable_cluster_autoscaler>>
+|Whether to setup a cluster autoscaler
+|`bool`
+|`false`
+|no
+
+|[[input_extra_lb_http_tcp_listeners]] <<input_extra_lb_http_tcp_listeners,extra_lb_http_tcp_listeners>>
+|Additional load-balancer listeners
+|`list(any)`
+|`[]`
+|no
+
+|[[input_extra_lb_target_groups]] <<input_extra_lb_target_groups,extra_lb_target_groups>>
+|Additional load-balancer target groups
+|`list(any)`
+|`[]`
+|no
+
+|[[input_kubernetes_version]] <<input_kubernetes_version,kubernetes_version>>
+|Kubernetes version to use for the EKS cluster.
+|`string`
+|`"1.21"`
+|no
+
+|[[input_nlb_attached_node_groups]] <<input_nlb_attached_node_groups,nlb_attached_node_groups>>
+|List of node_groups indexes that the NLB(s) should be attached to
+|`list`
+|`[]`
+|no
+
+|[[input_node_groups]] <<input_node_groups,node_groups>>
+|A map of node group configurations to be created.
+|`any`
+|`{}`
+|no
+
+|[[input_private_subnet_ids]] <<input_private_subnet_ids,private_subnet_ids>>
+|List of IDs of private subnets that the EKS instances will be attached to.
+|`list(string)`
+|n/a
+|yes
+
+|[[input_public_subnet_ids]] <<input_public_subnet_ids,public_subnet_ids>>
+|List of IDs of public subnets the public NLB will be attached to if enabled with 'create_public_nlb'.
+|`list(string)`
+|`[]`
+|no
+
+|[[input_vpc_cidr_block]] <<input_vpc_cidr_block,vpc_cidr_block>>
+|n/a
+|`string`
+|n/a
+|yes
+
+|[[input_vpc_id]] <<input_vpc_id,vpc_id>>
+|VPC where the cluster and nodes will be deployed.
+|`string`
+|n/a
+|yes
+
+|===
+
+= Outputs
+
+[cols="a,a",options="header,autowidth"]
+|===
+|Name |Description
+|[[output_base_domain]] <<output_base_domain,base_domain>> |n/a
+|[[output_cluster_id]] <<output_cluster_id,cluster_id>> |The name/id of the EKS cluster. Will block on cluster creation until the cluster is really ready
+|[[output_cluster_name]] <<output_cluster_name,cluster_name>> |n/a
+|[[output_cluster_oidc_issuer_url]] <<output_cluster_oidc_issuer_url,cluster_oidc_issuer_url>> |The URL on the EKS cluster OIDC Issuer
+|[[output_kubernetes]] <<output_kubernetes,kubernetes>> |n/a
+|[[output_kubernetes_cluster_ca_certificate]] <<output_kubernetes_cluster_ca_certificate,kubernetes_cluster_ca_certificate>> |n/a
+|[[output_kubernetes_host]] <<output_kubernetes_host,kubernetes_host>> |n/a
+|[[output_kubernetes_token]] <<output_kubernetes_token,kubernetes_token>> |n/a
+|[[output_nlb_target_groups]] <<output_nlb_target_groups,nlb_target_groups>> |n/a
+|[[output_node_groups]] <<output_node_groups,node_groups>> |Security group ID attached to the EKS nodes.
+|[[output_node_security_group_id]] <<output_node_security_group_id,node_security_group_id>> |n/a
+|===
 // END_TF_TABLES
 ====

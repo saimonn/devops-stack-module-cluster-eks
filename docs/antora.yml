@@ -1,6 +1,6 @@
 ---
-name: "minio"
-title: "MinIO Module"
+name: "eks"
+title: "EKS Cluster"
 version: true
 start_page: README.adoc
 nav:
