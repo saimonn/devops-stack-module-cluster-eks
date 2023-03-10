@@ -1,5 +1,5 @@
 variable "cluster_name" {
-  type        = string
+  type = string
 }
 
 variable "base_domain" {
@@ -11,7 +11,7 @@ variable "base_domain" {
 variable "kubernetes_version" {
   description = "Kubernetes version to use for the EKS cluster."
   type        = string
-  default     = "1.21"
+  default     = "1.25"
 }
 
 variable "cluster_endpoint_public_access_cidrs" {
@@ -70,7 +70,7 @@ variable "aws_auth_users" {
 variable "node_groups" {
   description = "A map of node group configurations to be created."
   type        = any
-  default     = {} 
+  default     = {}
 }
 
 variable "create_public_nlb" {
@@ -87,7 +87,7 @@ variable "create_private_nlb" {
 
 variable "nlb_attached_node_groups" {
   description = "List of node_groups indexes that the NLB(s) should be attached to"
-  type        = list
+  type        = list(any)
   default     = []
 }
 

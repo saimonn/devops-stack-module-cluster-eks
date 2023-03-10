@@ -11,25 +11,29 @@ A https://devops-stack.io/[DevOps Stack] module to deploy and configure an EKS c
 
 The following requirements are needed by this module:
 
-- [[requirement_terraform]] <<requirement_terraform,terraform>> (>= 0.13)
+- [[requirement_terraform]] <<requirement_terraform,terraform>> (>= 1.0)
 
-- [[requirement_aws]] <<requirement_aws,aws>> (~> 3.37)
+- [[requirement_argocd]] <<requirement_argocd,argocd>> (>= 4)
 
-- [[requirement_helm]] <<requirement_helm,helm>> (~> 2.0)
+- [[requirement_aws]] <<requirement_aws,aws>> (>= 4)
 
-- [[requirement_kubernetes]] <<requirement_kubernetes,kubernetes>> (~> 2.0)
+- [[requirement_helm]] <<requirement_helm,helm>> (>= 2)
 
-- [[requirement_local]] <<requirement_local,local>> (~> 2.0)
+- [[requirement_kubernetes]] <<requirement_kubernetes,kubernetes>> (>= 2)
 
-- [[requirement_null]] <<requirement_null,null>> (~> 3.0)
+- [[requirement_local]] <<requirement_local,local>> (>= 2)
 
-- [[requirement_random]] <<requirement_random,random>> (~> 3.0)
+- [[requirement_null]] <<requirement_null,null>> (>= 3)
+
+- [[requirement_random]] <<requirement_random,random>> (>= 3)
+
+- [[requirement_utils]] <<requirement_utils,utils>> (>= 1)
 
 === Providers
 
 The following providers are used by this module:
 
-- [[provider_aws]] <<provider_aws,aws>> (~> 3.37)
+- [[provider_aws]] <<provider_aws,aws>> (>= 4)
 
 - [[provider_dns]] <<provider_dns,dns>>
 
@@ -41,25 +45,25 @@ The following Modules are called:
 
 Source: terraform-aws-modules/eks/aws
 
-Version: ~>18.0
+Version: ~> 19.0
 
 ==== [[module_iam_assumable_role_cluster_autoscaler]] <<module_iam_assumable_role_cluster_autoscaler,iam_assumable_role_cluster_autoscaler>>
 
 Source: terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc
 
-Version: 4.0.0
+Version: ~> 5.0
 
 ==== [[module_nlb]] <<module_nlb,nlb>>
 
 Source: terraform-aws-modules/alb/aws
 
-Version: 6.0.0
+Version: ~> 8.0
 
 ==== [[module_nlb_private]] <<module_nlb_private,nlb_private>>
 
 Source: terraform-aws-modules/alb/aws
 
-Version: 5.10.0
+Version: ~> 8.0
 
 === Resources
 
@@ -221,13 +225,13 @@ Description: Kubernetes version to use for the EKS cluster.
 
 Type: `string`
 
-Default: `"1.21"`
+Default: `"1.25"`
 
 ==== [[input_nlb_attached_node_groups]] <<input_nlb_attached_node_groups,nlb_attached_node_groups>>
 
 Description: List of node_groups indexes that the NLB(s) should be attached to
 
-Type: `list`
+Type: `list(any)`
 
 Default: `[]`
 
@@ -254,10 +258,6 @@ The following outputs are exported:
 ==== [[output_base_domain]] <<output_base_domain,base_domain>>
 
 Description: n/a
-
-==== [[output_cluster_id]] <<output_cluster_id,cluster_id>>
-
-Description: The name/id of the EKS cluster. Will block on cluster creation until the cluster is really ready
 
 ==== [[output_cluster_name]] <<output_cluster_name,cluster_name>>
 
@@ -307,13 +307,15 @@ Description: n/a
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Version
-|[[requirement_terraform]] <<requirement_terraform,terraform>> |>= 0.13
-|[[requirement_aws]] <<requirement_aws,aws>> |~> 3.37
-|[[requirement_helm]] <<requirement_helm,helm>> |~> 2.0
-|[[requirement_kubernetes]] <<requirement_kubernetes,kubernetes>> |~> 2.0
-|[[requirement_local]] <<requirement_local,local>> |~> 2.0
-|[[requirement_null]] <<requirement_null,null>> |~> 3.0
-|[[requirement_random]] <<requirement_random,random>> |~> 3.0
+|[[requirement_terraform]] <<requirement_terraform,terraform>> |>= 1.0
+|[[requirement_argocd]] <<requirement_argocd,argocd>> |>= 4
+|[[requirement_aws]] <<requirement_aws,aws>> |>= 4
+|[[requirement_helm]] <<requirement_helm,helm>> |>= 2
+|[[requirement_kubernetes]] <<requirement_kubernetes,kubernetes>> |>= 2
+|[[requirement_local]] <<requirement_local,local>> |>= 2
+|[[requirement_null]] <<requirement_null,null>> |>= 3
+|[[requirement_random]] <<requirement_random,random>> |>= 3
+|[[requirement_utils]] <<requirement_utils,utils>> |>= 1
 |===
 
 = Providers
@@ -321,7 +323,7 @@ Description: n/a
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Version
-|[[provider_aws]] <<provider_aws,aws>> |~> 3.37
+|[[provider_aws]] <<provider_aws,aws>> |>= 4
 |[[provider_dns]] <<provider_dns,dns>> |n/a
 |===
 
@@ -330,10 +332,10 @@ Description: n/a
 [cols="a,a,a",options="header,autowidth"]
 |===
 |Name |Source |Version
-|[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~>18.0
-|[[module_iam_assumable_role_cluster_autoscaler]] <<module_iam_assumable_role_cluster_autoscaler,iam_assumable_role_cluster_autoscaler>> |terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc |4.0.0
-|[[module_nlb]] <<module_nlb,nlb>> |terraform-aws-modules/alb/aws |6.0.0
-|[[module_nlb_private]] <<module_nlb_private,nlb_private>> |terraform-aws-modules/alb/aws |5.10.0
+|[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~> 19.0
+|[[module_iam_assumable_role_cluster_autoscaler]] <<module_iam_assumable_role_cluster_autoscaler,iam_assumable_role_cluster_autoscaler>> |terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc |~> 5.0
+|[[module_nlb]] <<module_nlb,nlb>> |terraform-aws-modules/alb/aws |~> 8.0
+|[[module_nlb_private]] <<module_nlb_private,nlb_private>> |terraform-aws-modules/alb/aws |~> 8.0
 |===
 
 = Resources
@@ -458,12 +460,12 @@ list(object({
 |[[input_kubernetes_version]] <<input_kubernetes_version,kubernetes_version>>
 |Kubernetes version to use for the EKS cluster.
 |`string`
-|`"1.21"`
+|`"1.25"`
 |no
 
 |[[input_nlb_attached_node_groups]] <<input_nlb_attached_node_groups,nlb_attached_node_groups>>
 |List of node_groups indexes that the NLB(s) should be attached to
-|`list`
+|`list(any)`
 |`[]`
 |no
 
@@ -505,7 +507,6 @@ list(object({
 |===
 |Name |Description
 |[[output_base_domain]] <<output_base_domain,base_domain>> |n/a
-|[[output_cluster_id]] <<output_cluster_id,cluster_id>> |The name/id of the EKS cluster. Will block on cluster creation until the cluster is really ready
 |[[output_cluster_name]] <<output_cluster_name,cluster_name>> |n/a
 |[[output_cluster_oidc_issuer_url]] <<output_cluster_oidc_issuer_url,cluster_oidc_issuer_url>> |The URL on the EKS cluster OIDC Issuer
 |[[output_kubernetes]] <<output_kubernetes,kubernetes>> |n/a
