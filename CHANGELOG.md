@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v1.0.0-alpha.2...v1.0.0) (2023-03-24)
+
+
+### Documentation
+
+* correct module title and add PR template ([#6](https://github.com/camptocamp/devops-stack-module-cluster-eks/issues/6)) ([13eff88](https://github.com/camptocamp/devops-stack-module-cluster-eks/commit/13eff8865dd720be595c41afed6f88aad19f874a))
+
 ## [1.0.0-alpha.2](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v1.0.0...v1.0.0-alpha.2) (2023-03-10)
 
 
