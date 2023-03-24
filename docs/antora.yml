@@ -1,6 +1,6 @@
 ---
 name: "eks"
-title: "EKS Cluster"
+title: "EKS Cluster Module"
 version: true
 start_page: README.adoc
 nav:
