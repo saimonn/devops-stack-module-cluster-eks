@@ -91,18 +91,6 @@ variable "nlb_attached_node_groups" {
   default     = []
 }
 
-variable "enable_cluster_autoscaler" {
-  description = "Whether to setup a cluster autoscaler"
-  type        = bool
-  default     = false
-}
-
-variable "cluster_autoscaler_role_arn" {
-  description = "Role ARN linked to the cluster autoscaler ServiceAccount"
-  type        = string
-  default     = ""
-}
-
 variable "extra_lb_target_groups" {
   description = "Additional load-balancer target groups"
   type        = list(any)

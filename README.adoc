@@ -47,12 +47,6 @@ Source: terraform-aws-modules/eks/aws
 
 Version: ~> 19.0
 
-==== [[module_iam_assumable_role_cluster_autoscaler]] <<module_iam_assumable_role_cluster_autoscaler,iam_assumable_role_cluster_autoscaler>>
-
-Source: terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc
-
-Version: ~> 5.0
-
 ==== [[module_nlb]] <<module_nlb,nlb>>
 
 Source: terraform-aws-modules/alb/aws
@@ -69,10 +63,8 @@ Version: ~> 8.0
 
 The following resources are used by this module:
 
-- https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy[aws_iam_policy.cluster_autoscaler] (resource)
 - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record[aws_route53_record.wildcard] (resource)
 - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster_auth[aws_eks_cluster_auth.cluster] (data source)
-- https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document[aws_iam_policy_document.cluster_autoscaler] (data source)
 - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region[aws_region.current] (data source)
 - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/route53_zone[aws_route53_zone.this] (data source)
 - https://registry.terraform.io/providers/hashicorp/dns/latest/docs/data-sources/a_record_set[dns_a_record_set.nlb] (data source)
@@ -157,14 +149,6 @@ Type: `string`
 
 Default: `null`
 
-==== [[input_cluster_autoscaler_role_arn]] <<input_cluster_autoscaler_role_arn,cluster_autoscaler_role_arn>>
-
-Description: Role ARN linked to the cluster autoscaler ServiceAccount
-
-Type: `string`
-
-Default: `""`
-
 ==== [[input_cluster_endpoint_public_access_cidrs]] <<input_cluster_endpoint_public_access_cidrs,cluster_endpoint_public_access_cidrs>>
 
 Description: List of CIDR blocks which can access the Amazon EKS public API server endpoint.
@@ -194,14 +178,6 @@ Description: Whether to create an internet-facing NLB attached to the public sub
 Type: `bool`
 
 Default: `true`
-
-==== [[input_enable_cluster_autoscaler]] <<input_enable_cluster_autoscaler,enable_cluster_autoscaler>>
-
-Description: Whether to setup a cluster autoscaler
-
-Type: `bool`
-
-Default: `false`
 
 ==== [[input_extra_lb_http_tcp_listeners]] <<input_extra_lb_http_tcp_listeners,extra_lb_http_tcp_listeners>>
 
@@ -333,7 +309,6 @@ Description: n/a
 |===
 |Name |Source |Version
 |[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~> 19.0
-|[[module_iam_assumable_role_cluster_autoscaler]] <<module_iam_assumable_role_cluster_autoscaler,iam_assumable_role_cluster_autoscaler>> |terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc |~> 5.0
 |[[module_nlb]] <<module_nlb,nlb>> |terraform-aws-modules/alb/aws |~> 8.0
 |[[module_nlb_private]] <<module_nlb_private,nlb_private>> |terraform-aws-modules/alb/aws |~> 8.0
 |===
@@ -343,10 +318,8 @@ Description: n/a
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Type
-|https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy[aws_iam_policy.cluster_autoscaler] |resource
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record[aws_route53_record.wildcard] |resource
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster_auth[aws_eks_cluster_auth.cluster] |data source
-|https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document[aws_iam_policy_document.cluster_autoscaler] |data source
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region[aws_region.current] |data source
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/route53_zone[aws_route53_zone.this] |data source
 |https://registry.terraform.io/providers/hashicorp/dns/latest/docs/data-sources/a_record_set[dns_a_record_set.nlb] |data source
@@ -401,12 +374,6 @@ list(object({
 |`null`
 |no
 
-|[[input_cluster_autoscaler_role_arn]] <<input_cluster_autoscaler_role_arn,cluster_autoscaler_role_arn>>
-|Role ARN linked to the cluster autoscaler ServiceAccount
-|`string`
-|`""`
-|no
-
 |[[input_cluster_endpoint_public_access_cidrs]] <<input_cluster_endpoint_public_access_cidrs,cluster_endpoint_public_access_cidrs>>
 |List of CIDR blocks which can access the Amazon EKS public API server endpoint.
 |`list(string)`
@@ -437,12 +404,6 @@ list(object({
 |Whether to create an internet-facing NLB attached to the public subnets
 |`bool`
 |`true`
-|no
-
-|[[input_enable_cluster_autoscaler]] <<input_enable_cluster_autoscaler,enable_cluster_autoscaler>>
-|Whether to setup a cluster autoscaler
-|`bool`
-|`false`
 |no
 
 |[[input_extra_lb_http_tcp_listeners]] <<input_extra_lb_http_tcp_listeners,extra_lb_http_tcp_listeners>>
