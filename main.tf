@@ -89,21 +89,3 @@ module "cluster" {
     }
   }
 }
-
-# resource "aws_security_group_rule" "workers_ingress_healthcheck_https" {
-#   security_group_id = module.cluster.node_security_group_id
-#   type              = "ingress"
-#   protocol          = "TCP"
-#   from_port         = 443
-#   to_port           = 443
-#   cidr_blocks       = [var.vpc_cidr_block]
-# }
-
-# resource "aws_security_group_rule" "workers_ingress_healthcheck_http" {
-#   security_group_id = module.cluster.node_security_group_id
-#   type              = "ingress"
-#   protocol          = "TCP"
-#   from_port         = 80
-#   to_port           = 80
-#   cidr_blocks       = [var.vpc_cidr_block]
-# }

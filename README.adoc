@@ -1,6 +1,39 @@
 = devops-stack-module-cluster-eks
 
-A https://devops-stack.io/[DevOps Stack] module to deploy and configure an EKS cluster on Amazon Web Services.
+A https://devops-stack.io/[DevOps Stack] module to deploy a Kubernetes cluster on Amazon Web Services EKS.
+
+This module currently only supports https://docs.aws.amazon.com/eks/latest/userguide/worker.html[self-managed node groups] and not https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html[EKS managed nodes]. It uses the Terraform https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest[module "eks" by AWS] to manage the cluster itself.
+
+The `node_groups` variable is a map of objects. Each value of the map creates a node group referenced by its label. The value object can take any input accepted by the https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest/submodules/self-managed-node-group[self-managed-node-group] submodule.
+
+Here is an example that creates one node group with 3 instances of type `r5a.large`, attaches them to the main Load Balancer, and customizes the base EBS volume size to 100 GB:
+
+----
+  node_groups = {
+    "my-node-group" = {
+      instance_type     = "r5a.xlarge"
+      min_size          = 3
+      max_size          = 3
+      desired_size      = 3
+      target_group_arns = module.my_cluster.nlb_target_groups
+
+      block_device_mappings = {
+        "default" = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size = 100
+          }
+        }
+      }
+    },
+  }
+----
+
+TIP: You can check out available instance types on the https://aws.amazon.com/ec2/instance-types[official AWS documentation pages].
+
+Depending on the `create_public_nlb` and `create_private_nlb` variales, it creates a public and/or public Network Load Balancer(s). The node groups that have the `target_group_arns = module.my_cluster.nlb_target_groups` value set will be added as backends of the LBs. By default, the LBs only forward traffic on the ports `80` and `443`, but you can customize this using the `extra_lb_target_groups` and `extra_lb_http_tcp_listeners` variables to add other ports. Look at the `lb.tf` file in this module for the syntax.
+
+This module needs a Route 53 DNS zone in the same AWS account to create a wildcard CNAME record that points to the Network LB. The DNS zone must be passed in the `base_domain` variable. This record is used by other DevOps Stack modules as default URLs for their applications.
 
 == Technical Reference
 
@@ -13,21 +46,7 @@ The following requirements are needed by this module:
 
 - [[requirement_terraform]] <<requirement_terraform,terraform>> (>= 1.0)
 
-- [[requirement_argocd]] <<requirement_argocd,argocd>> (>= 4)
-
 - [[requirement_aws]] <<requirement_aws,aws>> (>= 4)
-
-- [[requirement_helm]] <<requirement_helm,helm>> (>= 2)
-
-- [[requirement_kubernetes]] <<requirement_kubernetes,kubernetes>> (>= 2)
-
-- [[requirement_local]] <<requirement_local,local>> (>= 2)
-
-- [[requirement_null]] <<requirement_null,null>> (>= 3)
-
-- [[requirement_random]] <<requirement_random,random>> (>= 3)
-
-- [[requirement_utils]] <<requirement_utils,utils>> (>= 1)
 
 === Providers
 
@@ -75,7 +94,7 @@ The following input variables are required:
 
 ==== [[input_cluster_name]] <<input_cluster_name,cluster_name>>
 
-Description: n/a
+Description: Name of the EKS cluster. Must be unique in the AWS account.
 
 Type: `string`
 
@@ -85,15 +104,9 @@ Description: List of IDs of private subnets that the EKS instances will be attac
 
 Type: `list(string)`
 
-==== [[input_vpc_cidr_block]] <<input_vpc_cidr_block,vpc_cidr_block>>
-
-Description: n/a
-
-Type: `string`
-
 ==== [[input_vpc_id]] <<input_vpc_id,vpc_id>>
 
-Description: VPC where the cluster and nodes will be deployed.
+Description: ID of the VPC where the cluster and nodes will be deployed.
 
 Type: `string`
 
@@ -103,7 +116,7 @@ The following input variables are optional (have default values):
 
 ==== [[input_aws_auth_accounts]] <<input_aws_auth_accounts,aws_auth_accounts>>
 
-Description: Additional AWS account numbers to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+Description: Additional AWS account numbers to add to the aws-auth configmap.
 
 Type: `list(string)`
 
@@ -111,7 +124,7 @@ Default: `[]`
 
 ==== [[input_aws_auth_roles]] <<input_aws_auth_roles,aws_auth_roles>>
 
-Description: Additional IAM roles to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+Description: Additional IAM roles to add to the aws-auth configmap.
 
 Type:
 [source,hcl]
@@ -127,7 +140,7 @@ Default: `[]`
 
 ==== [[input_aws_auth_users]] <<input_aws_auth_users,aws_auth_users>>
 
-Description: Additional IAM users to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+Description: Additional IAM users to add to the aws-auth configmap.
 
 Type:
 [source,hcl]
@@ -143,7 +156,9 @@ Default: `[]`
 
 ==== [[input_base_domain]] <<input_base_domain,base_domain>>
 
-Description: The base domain used for Ingresses.
+Description: The base domain for the cluster.
+
+This module needs a Route 53 zone matching this variable with permission to create DNS records. It will create a wildcard CNAME record `*.apps.<base_domain>` that points to an Elastic Load Balancer routing ingress traffic to all cluster nodes. Such urls will be used by default by other DevOps Stack modules for the applications they deploy (e.g. Argo CD, Prometheus, etc).
 
 Type: `string`
 
@@ -181,7 +196,9 @@ Default: `true`
 
 ==== [[input_extra_lb_http_tcp_listeners]] <<input_extra_lb_http_tcp_listeners,extra_lb_http_tcp_listeners>>
 
-Description: Additional load-balancer listeners
+Description: Additional Listeners to attach to Network LBs.
+
+A list of maps describing the HTTP listeners. Required key/values: `port`, `protocol`. Optional key/values: `target_group_index` (defaults to `http_tcp_listeners[count.index]`).
 
 Type: `list(any)`
 
@@ -189,7 +206,9 @@ Default: `[]`
 
 ==== [[input_extra_lb_target_groups]] <<input_extra_lb_target_groups,extra_lb_target_groups>>
 
-Description: Additional load-balancer target groups
+Description: Additional Target Groups to attach to Network LBs.
+
+A list of maps containing key/value pairs that define the target groups. Required key/values: `name`, `backend_protocol`, `backend_port`.
 
 Type: `list(any)`
 
@@ -197,7 +216,11 @@ Default: `[]`
 
 ==== [[input_kubernetes_version]] <<input_kubernetes_version,kubernetes_version>>
 
-Description: Kubernetes version to use for the EKS cluster.
+Description: Kubernetes version for the EKS cluster.
+
+Please check the https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] to find the available versions.
+
+This variable can be changed on an existing cluster to update it. *Note that this triggers an "instance refresh" on the nodes' auto scaling group, and so will recreate all pods running on the cluster*.
 
 Type: `string`
 
@@ -233,43 +256,43 @@ The following outputs are exported:
 
 ==== [[output_base_domain]] <<output_base_domain,base_domain>>
 
-Description: n/a
+Description: The base domain for the cluster.
 
 ==== [[output_cluster_name]] <<output_cluster_name,cluster_name>>
 
-Description: n/a
+Description: Name of the EKS cluster.
 
 ==== [[output_cluster_oidc_issuer_url]] <<output_cluster_oidc_issuer_url,cluster_oidc_issuer_url>>
 
-Description: The URL on the EKS cluster OIDC Issuer
+Description: The URL on the EKS cluster for the OpenID Connect identity provider
 
 ==== [[output_kubernetes]] <<output_kubernetes,kubernetes>>
 
-Description: n/a
+Description: Kubernetes API endpoint and CA certificate as a structured value.
 
 ==== [[output_kubernetes_cluster_ca_certificate]] <<output_kubernetes_cluster_ca_certificate,kubernetes_cluster_ca_certificate>>
 
-Description: n/a
+Description: Certificate data required to communicate with the cluster.
 
 ==== [[output_kubernetes_host]] <<output_kubernetes_host,kubernetes_host>>
 
-Description: n/a
+Description: Endpoint for your Kubernetes API server.
 
 ==== [[output_kubernetes_token]] <<output_kubernetes_token,kubernetes_token>>
 
-Description: n/a
+Description: Token to use to authenticate with the cluster.
 
 ==== [[output_nlb_target_groups]] <<output_nlb_target_groups,nlb_target_groups>>
 
-Description: n/a
+Description: List of ARNs of Network LBs (public and/or private if enabled).
 
 ==== [[output_node_groups]] <<output_node_groups,node_groups>>
 
-Description: Security group ID attached to the EKS nodes.
+Description: Map of attribute maps for all node groups created.
 
 ==== [[output_node_security_group_id]] <<output_node_security_group_id,node_security_group_id>>
 
-Description: n/a
+Description: ID of the node shared security group
 // END_TF_DOCS
 
 === Reference in table format 
@@ -284,14 +307,7 @@ Description: n/a
 |===
 |Name |Version
 |[[requirement_terraform]] <<requirement_terraform,terraform>> |>= 1.0
-|[[requirement_argocd]] <<requirement_argocd,argocd>> |>= 4
 |[[requirement_aws]] <<requirement_aws,aws>> |>= 4
-|[[requirement_helm]] <<requirement_helm,helm>> |>= 2
-|[[requirement_kubernetes]] <<requirement_kubernetes,kubernetes>> |>= 2
-|[[requirement_local]] <<requirement_local,local>> |>= 2
-|[[requirement_null]] <<requirement_null,null>> |>= 3
-|[[requirement_random]] <<requirement_random,random>> |>= 3
-|[[requirement_utils]] <<requirement_utils,utils>> |>= 1
 |===
 
 = Providers
@@ -331,13 +347,13 @@ Description: n/a
 |===
 |Name |Description |Type |Default |Required
 |[[input_aws_auth_accounts]] <<input_aws_auth_accounts,aws_auth_accounts>>
-|Additional AWS account numbers to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+|Additional AWS account numbers to add to the aws-auth configmap.
 |`list(string)`
 |`[]`
 |no
 
 |[[input_aws_auth_roles]] <<input_aws_auth_roles,aws_auth_roles>>
-|Additional IAM roles to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+|Additional IAM roles to add to the aws-auth configmap.
 |
 
 [source]
@@ -353,7 +369,7 @@ list(object({
 |no
 
 |[[input_aws_auth_users]] <<input_aws_auth_users,aws_auth_users>>
-|Additional IAM users to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format.
+|Additional IAM users to add to the aws-auth configmap.
 |
 
 [source]
@@ -369,7 +385,10 @@ list(object({
 |no
 
 |[[input_base_domain]] <<input_base_domain,base_domain>>
-|The base domain used for Ingresses.
+|The base domain for the cluster.
+
+This module needs a Route 53 zone matching this variable with permission to create DNS records. It will create a wildcard CNAME record `*.apps.<base_domain>` that points to an Elastic Load Balancer routing ingress traffic to all cluster nodes. Such urls will be used by default by other DevOps Stack modules for the applications they deploy (e.g. Argo CD, Prometheus, etc).
+
 |`string`
 |`null`
 |no
@@ -389,7 +408,7 @@ list(object({
 |no
 
 |[[input_cluster_name]] <<input_cluster_name,cluster_name>>
-|n/a
+|Name of the EKS cluster. Must be unique in the AWS account.
 |`string`
 |n/a
 |yes
@@ -407,19 +426,30 @@ list(object({
 |no
 
 |[[input_extra_lb_http_tcp_listeners]] <<input_extra_lb_http_tcp_listeners,extra_lb_http_tcp_listeners>>
-|Additional load-balancer listeners
+|Additional Listeners to attach to Network LBs.
+
+A list of maps describing the HTTP listeners. Required key/values: `port`, `protocol`. Optional key/values: `target_group_index` (defaults to `http_tcp_listeners[count.index]`).
+
 |`list(any)`
 |`[]`
 |no
 
 |[[input_extra_lb_target_groups]] <<input_extra_lb_target_groups,extra_lb_target_groups>>
-|Additional load-balancer target groups
+|Additional Target Groups to attach to Network LBs.
+
+A list of maps containing key/value pairs that define the target groups. Required key/values: `name`, `backend_protocol`, `backend_port`.
+
 |`list(any)`
 |`[]`
 |no
 
 |[[input_kubernetes_version]] <<input_kubernetes_version,kubernetes_version>>
-|Kubernetes version to use for the EKS cluster.
+|Kubernetes version for the EKS cluster.
+
+Please check the https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] to find the available versions.
+
+This variable can be changed on an existing cluster to update it. *Note that this triggers an "instance refresh" on the nodes' auto scaling group, and so will recreate all pods running on the cluster*.
+
 |`string`
 |`"1.25"`
 |no
@@ -448,14 +478,8 @@ list(object({
 |`[]`
 |no
 
-|[[input_vpc_cidr_block]] <<input_vpc_cidr_block,vpc_cidr_block>>
-|n/a
-|`string`
-|n/a
-|yes
-
 |[[input_vpc_id]] <<input_vpc_id,vpc_id>>
-|VPC where the cluster and nodes will be deployed.
+|ID of the VPC where the cluster and nodes will be deployed.
 |`string`
 |n/a
 |yes
@@ -467,16 +491,16 @@ list(object({
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Description
-|[[output_base_domain]] <<output_base_domain,base_domain>> |n/a
-|[[output_cluster_name]] <<output_cluster_name,cluster_name>> |n/a
-|[[output_cluster_oidc_issuer_url]] <<output_cluster_oidc_issuer_url,cluster_oidc_issuer_url>> |The URL on the EKS cluster OIDC Issuer
-|[[output_kubernetes]] <<output_kubernetes,kubernetes>> |n/a
-|[[output_kubernetes_cluster_ca_certificate]] <<output_kubernetes_cluster_ca_certificate,kubernetes_cluster_ca_certificate>> |n/a
-|[[output_kubernetes_host]] <<output_kubernetes_host,kubernetes_host>> |n/a
-|[[output_kubernetes_token]] <<output_kubernetes_token,kubernetes_token>> |n/a
-|[[output_nlb_target_groups]] <<output_nlb_target_groups,nlb_target_groups>> |n/a
-|[[output_node_groups]] <<output_node_groups,node_groups>> |Security group ID attached to the EKS nodes.
-|[[output_node_security_group_id]] <<output_node_security_group_id,node_security_group_id>> |n/a
+|[[output_base_domain]] <<output_base_domain,base_domain>> |The base domain for the cluster.
+|[[output_cluster_name]] <<output_cluster_name,cluster_name>> |Name of the EKS cluster.
+|[[output_cluster_oidc_issuer_url]] <<output_cluster_oidc_issuer_url,cluster_oidc_issuer_url>> |The URL on the EKS cluster for the OpenID Connect identity provider
+|[[output_kubernetes]] <<output_kubernetes,kubernetes>> |Kubernetes API endpoint and CA certificate as a structured value.
+|[[output_kubernetes_cluster_ca_certificate]] <<output_kubernetes_cluster_ca_certificate,kubernetes_cluster_ca_certificate>> |Certificate data required to communicate with the cluster.
+|[[output_kubernetes_host]] <<output_kubernetes_host,kubernetes_host>> |Endpoint for your Kubernetes API server.
+|[[output_kubernetes_token]] <<output_kubernetes_token,kubernetes_token>> |Token to use to authenticate with the cluster.
+|[[output_nlb_target_groups]] <<output_nlb_target_groups,nlb_target_groups>> |List of ARNs of Network LBs (public and/or private if enabled).
+|[[output_node_groups]] <<output_node_groups,node_groups>> |Map of attribute maps for all node groups created.
+|[[output_node_security_group_id]] <<output_node_security_group_id,node_security_group_id>> |ID of the node shared security group
 |===
 // END_TF_TABLES
 ====

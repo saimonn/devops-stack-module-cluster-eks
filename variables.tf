@@ -1,15 +1,26 @@
 variable "cluster_name" {
-  type = string
+  description = "Name of the EKS cluster. Must be unique in the AWS account."
+  type        = string
 }
 
 variable "base_domain" {
-  description = "The base domain used for Ingresses."
+  description = <<-EOT
+    The base domain for the cluster.
+
+    This module needs a Route 53 zone matching this variable with permission to create DNS records. It will create a wildcard CNAME record `*.apps.<base_domain>` that points to an Elastic Load Balancer routing ingress traffic to all cluster nodes. Such urls will be used by default by other DevOps Stack modules for the applications they deploy (e.g. Argo CD, Prometheus, etc).
+  EOT
   type        = string
   default     = null
 }
 
 variable "kubernetes_version" {
-  description = "Kubernetes version to use for the EKS cluster."
+  description = <<-EOT
+    Kubernetes version for the EKS cluster.
+
+    Please check the https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] to find the available versions.
+
+    This variable can be changed on an existing cluster to update it. *Note that this triggers an "instance refresh" on the nodes' auto scaling group, and so will recreate all pods running on the cluster*.
+  EOT
   type        = string
   default     = "1.25"
 }
@@ -21,12 +32,7 @@ variable "cluster_endpoint_public_access_cidrs" {
 }
 
 variable "vpc_id" {
-  description = "VPC where the cluster and nodes will be deployed."
-  type        = string
-}
-
-variable "vpc_cidr_block" {
-  description = ""
+  description = "ID of the VPC where the cluster and nodes will be deployed."
   type        = string
 }
 
@@ -42,13 +48,13 @@ variable "public_subnet_ids" {
 }
 
 variable "aws_auth_accounts" {
-  description = "Additional AWS account numbers to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format."
+  description = "Additional AWS account numbers to add to the aws-auth configmap."
   type        = list(string)
   default     = []
 }
 
 variable "aws_auth_roles" {
-  description = "Additional IAM roles to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format."
+  description = "Additional IAM roles to add to the aws-auth configmap."
   type = list(object({
     rolearn  = string
     username = string
@@ -58,7 +64,7 @@ variable "aws_auth_roles" {
 }
 
 variable "aws_auth_users" {
-  description = "Additional IAM users to add to the aws-auth configmap. See examples/basic/variables.tf in the terraform-aws-eks module's code for example format."
+  description = "Additional IAM users to add to the aws-auth configmap."
   type = list(object({
     userarn  = string
     username = string
@@ -92,13 +98,21 @@ variable "nlb_attached_node_groups" {
 }
 
 variable "extra_lb_target_groups" {
-  description = "Additional load-balancer target groups"
+  description = <<-EOT
+    Additional Target Groups to attach to Network LBs.
+
+    A list of maps containing key/value pairs that define the target groups. Required key/values: `name`, `backend_protocol`, `backend_port`.
+  EOT
   type        = list(any)
   default     = []
 }
 
 variable "extra_lb_http_tcp_listeners" {
-  description = "Additional load-balancer listeners"
+  description = <<-EOT
+    Additional Listeners to attach to Network LBs.
+
+    A list of maps describing the HTTP listeners. Required key/values: `port`, `protocol`. Optional key/values: `target_group_index` (defaults to `http_tcp_listeners[count.index]`).
+  EOT
   type        = list(any)
   default     = []
 }
