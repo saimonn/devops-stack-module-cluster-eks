@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v1.0.0...v2.0.0) (2023-04-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove untested cluster-autoscaler support ([#9](https://github.com/camptocamp/devops-stack-module-cluster-eks/issues/9))
+
+### Features
+
+* remove untested cluster-autoscaler support ([#9](https://github.com/camptocamp/devops-stack-module-cluster-eks/issues/9)) ([3565a7b](https://github.com/camptocamp/devops-stack-module-cluster-eks/commit/3565a7b919284487c64899bc687fd58dba003f98))
+
 ## [1.0.0](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v1.0.0-alpha.2...v1.0.0) (2023-03-24)
 
 
