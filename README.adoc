@@ -52,9 +52,9 @@ The following requirements are needed by this module:
 
 The following providers are used by this module:
 
-- [[provider_aws]] <<provider_aws,aws>> (>= 4)
-
 - [[provider_dns]] <<provider_dns,dns>>
+
+- [[provider_aws]] <<provider_aws,aws>> (>= 4)
 
 === Modules
 
@@ -98,21 +98,65 @@ Description: Name of the EKS cluster. Must be unique in the AWS account.
 
 Type: `string`
 
-==== [[input_private_subnet_ids]] <<input_private_subnet_ids,private_subnet_ids>>
-
-Description: List of IDs of private subnets that the EKS instances will be attached to.
-
-Type: `list(string)`
-
 ==== [[input_vpc_id]] <<input_vpc_id,vpc_id>>
 
 Description: ID of the VPC where the cluster and nodes will be deployed.
 
 Type: `string`
 
+==== [[input_private_subnet_ids]] <<input_private_subnet_ids,private_subnet_ids>>
+
+Description: List of IDs of private subnets that the EKS instances will be attached to.
+
+Type: `list(string)`
+
 === Optional Inputs
 
 The following input variables are optional (have default values):
+
+==== [[input_base_domain]] <<input_base_domain,base_domain>>
+
+Description: The base domain for the cluster.
+
+This module needs a Route 53 zone matching this variable with permission to create DNS records. It will create a wildcard CNAME record `*.apps.<base_domain>` that points to an Elastic Load Balancer routing ingress traffic to all cluster nodes. Such urls will be used by default by other DevOps Stack modules for the applications they deploy (e.g. Argo CD, Prometheus, etc).
+
+Type: `string`
+
+Default: `null`
+
+==== [[input_kubernetes_version]] <<input_kubernetes_version,kubernetes_version>>
+
+Description: Kubernetes version for the EKS cluster.
+
+Please check the https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] to find the available versions.
+
+This variable can be changed on an existing cluster to update it. *Note that this triggers an "instance refresh" on the nodes' auto scaling group, and so will recreate all pods running on the cluster*.
+
+Type: `string`
+
+Default: `"1.25"`
+
+==== [[input_cluster_endpoint_public_access_cidrs]] <<input_cluster_endpoint_public_access_cidrs,cluster_endpoint_public_access_cidrs>>
+
+Description: List of CIDR blocks which can access the Amazon EKS public API server endpoint.
+
+Type: `list(string)`
+
+Default:
+[source,json]
+----
+[
+  "0.0.0.0/0"
+]
+----
+
+==== [[input_public_subnet_ids]] <<input_public_subnet_ids,public_subnet_ids>>
+
+Description: List of IDs of public subnets the public NLB will be attached to if enabled with 'create_public_nlb'.
+
+Type: `list(string)`
+
+Default: `[]`
 
 ==== [[input_aws_auth_accounts]] <<input_aws_auth_accounts,aws_auth_accounts>>
 
@@ -154,37 +198,13 @@ list(object({
 
 Default: `[]`
 
-==== [[input_base_domain]] <<input_base_domain,base_domain>>
+==== [[input_node_groups]] <<input_node_groups,node_groups>>
 
-Description: The base domain for the cluster.
+Description: A map of node group configurations to be created.
 
-This module needs a Route 53 zone matching this variable with permission to create DNS records. It will create a wildcard CNAME record `*.apps.<base_domain>` that points to an Elastic Load Balancer routing ingress traffic to all cluster nodes. Such urls will be used by default by other DevOps Stack modules for the applications they deploy (e.g. Argo CD, Prometheus, etc).
+Type: `any`
 
-Type: `string`
-
-Default: `null`
-
-==== [[input_cluster_endpoint_public_access_cidrs]] <<input_cluster_endpoint_public_access_cidrs,cluster_endpoint_public_access_cidrs>>
-
-Description: List of CIDR blocks which can access the Amazon EKS public API server endpoint.
-
-Type: `list(string)`
-
-Default:
-[source,json]
-----
-[
-  "0.0.0.0/0"
-]
-----
-
-==== [[input_create_private_nlb]] <<input_create_private_nlb,create_private_nlb>>
-
-Description: Whether to create an internal NLB attached the private subnets
-
-Type: `bool`
-
-Default: `false`
+Default: `{}`
 
 ==== [[input_create_public_nlb]] <<input_create_public_nlb,create_public_nlb>>
 
@@ -194,11 +214,17 @@ Type: `bool`
 
 Default: `true`
 
-==== [[input_extra_lb_http_tcp_listeners]] <<input_extra_lb_http_tcp_listeners,extra_lb_http_tcp_listeners>>
+==== [[input_create_private_nlb]] <<input_create_private_nlb,create_private_nlb>>
 
-Description: Additional Listeners to attach to Network LBs.
+Description: Whether to create an internal NLB attached the private subnets
 
-A list of maps describing the HTTP listeners. Required key/values: `port`, `protocol`. Optional key/values: `target_group_index` (defaults to `http_tcp_listeners[count.index]`).
+Type: `bool`
+
+Default: `false`
+
+==== [[input_nlb_attached_node_groups]] <<input_nlb_attached_node_groups,nlb_attached_node_groups>>
+
+Description: List of node_groups indexes that the NLB(s) should be attached to
 
 Type: `list(any)`
 
@@ -214,39 +240,13 @@ Type: `list(any)`
 
 Default: `[]`
 
-==== [[input_kubernetes_version]] <<input_kubernetes_version,kubernetes_version>>
+==== [[input_extra_lb_http_tcp_listeners]] <<input_extra_lb_http_tcp_listeners,extra_lb_http_tcp_listeners>>
 
-Description: Kubernetes version for the EKS cluster.
+Description: Additional Listeners to attach to Network LBs.
 
-Please check the https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] to find the available versions.
-
-This variable can be changed on an existing cluster to update it. *Note that this triggers an "instance refresh" on the nodes' auto scaling group, and so will recreate all pods running on the cluster*.
-
-Type: `string`
-
-Default: `"1.25"`
-
-==== [[input_nlb_attached_node_groups]] <<input_nlb_attached_node_groups,nlb_attached_node_groups>>
-
-Description: List of node_groups indexes that the NLB(s) should be attached to
+A list of maps describing the HTTP listeners. Required key/values: `port`, `protocol`. Optional key/values: `target_group_index` (defaults to `http_tcp_listeners[count.index]`).
 
 Type: `list(any)`
-
-Default: `[]`
-
-==== [[input_node_groups]] <<input_node_groups,node_groups>>
-
-Description: A map of node group configurations to be created.
-
-Type: `any`
-
-Default: `{}`
-
-==== [[input_public_subnet_ids]] <<input_public_subnet_ids,public_subnet_ids>>
-
-Description: List of IDs of public subnets the public NLB will be attached to if enabled with 'create_public_nlb'.
-
-Type: `list(string)`
 
 Default: `[]`
 
@@ -254,29 +254,33 @@ Default: `[]`
 
 The following outputs are exported:
 
-==== [[output_base_domain]] <<output_base_domain,base_domain>>
-
-Description: The base domain for the cluster.
-
 ==== [[output_cluster_name]] <<output_cluster_name,cluster_name>>
 
 Description: Name of the EKS cluster.
+
+==== [[output_base_domain]] <<output_base_domain,base_domain>>
+
+Description: The base domain for the cluster.
 
 ==== [[output_cluster_oidc_issuer_url]] <<output_cluster_oidc_issuer_url,cluster_oidc_issuer_url>>
 
 Description: The URL on the EKS cluster for the OpenID Connect identity provider
 
-==== [[output_kubernetes]] <<output_kubernetes,kubernetes>>
+==== [[output_node_security_group_id]] <<output_node_security_group_id,node_security_group_id>>
 
-Description: Kubernetes API endpoint and CA certificate as a structured value.
+Description: ID of the node shared security group
 
-==== [[output_kubernetes_cluster_ca_certificate]] <<output_kubernetes_cluster_ca_certificate,kubernetes_cluster_ca_certificate>>
+==== [[output_node_groups]] <<output_node_groups,node_groups>>
 
-Description: Certificate data required to communicate with the cluster.
+Description: Map of attribute maps for all node groups created.
 
 ==== [[output_kubernetes_host]] <<output_kubernetes_host,kubernetes_host>>
 
 Description: Endpoint for your Kubernetes API server.
+
+==== [[output_kubernetes_cluster_ca_certificate]] <<output_kubernetes_cluster_ca_certificate,kubernetes_cluster_ca_certificate>>
+
+Description: Certificate data required to communicate with the cluster.
 
 ==== [[output_kubernetes_token]] <<output_kubernetes_token,kubernetes_token>>
 
@@ -286,13 +290,9 @@ Description: Token to use to authenticate with the cluster.
 
 Description: List of ARNs of Network LBs (public and/or private if enabled).
 
-==== [[output_node_groups]] <<output_node_groups,node_groups>>
+==== [[output_kubernetes]] <<output_kubernetes,kubernetes>>
 
-Description: Map of attribute maps for all node groups created.
-
-==== [[output_node_security_group_id]] <<output_node_security_group_id,node_security_group_id>>
-
-Description: ID of the node shared security group
+Description: Kubernetes API endpoint and CA certificate as a structured value.
 // END_TF_DOCS
 
 === Reference in table format 
@@ -315,8 +315,8 @@ Description: ID of the node shared security group
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Version
-|[[provider_aws]] <<provider_aws,aws>> |>= 4
 |[[provider_dns]] <<provider_dns,dns>> |n/a
+|[[provider_aws]] <<provider_aws,aws>> |>= 4
 |===
 
 = Modules
@@ -346,6 +346,64 @@ Description: ID of the node shared security group
 [cols="a,a,a,a,a",options="header,autowidth"]
 |===
 |Name |Description |Type |Default |Required
+|[[input_cluster_name]] <<input_cluster_name,cluster_name>>
+|Name of the EKS cluster. Must be unique in the AWS account.
+|`string`
+|n/a
+|yes
+
+|[[input_base_domain]] <<input_base_domain,base_domain>>
+|The base domain for the cluster.
+
+This module needs a Route 53 zone matching this variable with permission to create DNS records. It will create a wildcard CNAME record `*.apps.<base_domain>` that points to an Elastic Load Balancer routing ingress traffic to all cluster nodes. Such urls will be used by default by other DevOps Stack modules for the applications they deploy (e.g. Argo CD, Prometheus, etc).
+
+|`string`
+|`null`
+|no
+
+|[[input_kubernetes_version]] <<input_kubernetes_version,kubernetes_version>>
+|Kubernetes version for the EKS cluster.
+
+Please check the https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] to find the available versions.
+
+This variable can be changed on an existing cluster to update it. *Note that this triggers an "instance refresh" on the nodes' auto scaling group, and so will recreate all pods running on the cluster*.
+
+|`string`
+|`"1.25"`
+|no
+
+|[[input_cluster_endpoint_public_access_cidrs]] <<input_cluster_endpoint_public_access_cidrs,cluster_endpoint_public_access_cidrs>>
+|List of CIDR blocks which can access the Amazon EKS public API server endpoint.
+|`list(string)`
+|
+
+[source]
+----
+[
+  "0.0.0.0/0"
+]
+----
+
+|no
+
+|[[input_vpc_id]] <<input_vpc_id,vpc_id>>
+|ID of the VPC where the cluster and nodes will be deployed.
+|`string`
+|n/a
+|yes
+
+|[[input_private_subnet_ids]] <<input_private_subnet_ids,private_subnet_ids>>
+|List of IDs of private subnets that the EKS instances will be attached to.
+|`list(string)`
+|n/a
+|yes
+
+|[[input_public_subnet_ids]] <<input_public_subnet_ids,public_subnet_ids>>
+|List of IDs of public subnets the public NLB will be attached to if enabled with 'create_public_nlb'.
+|`list(string)`
+|`[]`
+|no
+
 |[[input_aws_auth_accounts]] <<input_aws_auth_accounts,aws_auth_accounts>>
 |Additional AWS account numbers to add to the aws-auth configmap.
 |`list(string)`
@@ -384,39 +442,10 @@ list(object({
 |`[]`
 |no
 
-|[[input_base_domain]] <<input_base_domain,base_domain>>
-|The base domain for the cluster.
-
-This module needs a Route 53 zone matching this variable with permission to create DNS records. It will create a wildcard CNAME record `*.apps.<base_domain>` that points to an Elastic Load Balancer routing ingress traffic to all cluster nodes. Such urls will be used by default by other DevOps Stack modules for the applications they deploy (e.g. Argo CD, Prometheus, etc).
-
-|`string`
-|`null`
-|no
-
-|[[input_cluster_endpoint_public_access_cidrs]] <<input_cluster_endpoint_public_access_cidrs,cluster_endpoint_public_access_cidrs>>
-|List of CIDR blocks which can access the Amazon EKS public API server endpoint.
-|`list(string)`
-|
-
-[source]
-----
-[
-  "0.0.0.0/0"
-]
-----
-
-|no
-
-|[[input_cluster_name]] <<input_cluster_name,cluster_name>>
-|Name of the EKS cluster. Must be unique in the AWS account.
-|`string`
-|n/a
-|yes
-
-|[[input_create_private_nlb]] <<input_create_private_nlb,create_private_nlb>>
-|Whether to create an internal NLB attached the private subnets
-|`bool`
-|`false`
+|[[input_node_groups]] <<input_node_groups,node_groups>>
+|A map of node group configurations to be created.
+|`any`
+|`{}`
 |no
 
 |[[input_create_public_nlb]] <<input_create_public_nlb,create_public_nlb>>
@@ -425,11 +454,14 @@ This module needs a Route 53 zone matching this variable with permission to crea
 |`true`
 |no
 
-|[[input_extra_lb_http_tcp_listeners]] <<input_extra_lb_http_tcp_listeners,extra_lb_http_tcp_listeners>>
-|Additional Listeners to attach to Network LBs.
+|[[input_create_private_nlb]] <<input_create_private_nlb,create_private_nlb>>
+|Whether to create an internal NLB attached the private subnets
+|`bool`
+|`false`
+|no
 
-A list of maps describing the HTTP listeners. Required key/values: `port`, `protocol`. Optional key/values: `target_group_index` (defaults to `http_tcp_listeners[count.index]`).
-
+|[[input_nlb_attached_node_groups]] <<input_nlb_attached_node_groups,nlb_attached_node_groups>>
+|List of node_groups indexes that the NLB(s) should be attached to
 |`list(any)`
 |`[]`
 |no
@@ -443,46 +475,14 @@ A list of maps containing key/value pairs that define the target groups. Require
 |`[]`
 |no
 
-|[[input_kubernetes_version]] <<input_kubernetes_version,kubernetes_version>>
-|Kubernetes version for the EKS cluster.
+|[[input_extra_lb_http_tcp_listeners]] <<input_extra_lb_http_tcp_listeners,extra_lb_http_tcp_listeners>>
+|Additional Listeners to attach to Network LBs.
 
-Please check the https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] to find the available versions.
+A list of maps describing the HTTP listeners. Required key/values: `port`, `protocol`. Optional key/values: `target_group_index` (defaults to `http_tcp_listeners[count.index]`).
 
-This variable can be changed on an existing cluster to update it. *Note that this triggers an "instance refresh" on the nodes' auto scaling group, and so will recreate all pods running on the cluster*.
-
-|`string`
-|`"1.25"`
-|no
-
-|[[input_nlb_attached_node_groups]] <<input_nlb_attached_node_groups,nlb_attached_node_groups>>
-|List of node_groups indexes that the NLB(s) should be attached to
 |`list(any)`
 |`[]`
 |no
-
-|[[input_node_groups]] <<input_node_groups,node_groups>>
-|A map of node group configurations to be created.
-|`any`
-|`{}`
-|no
-
-|[[input_private_subnet_ids]] <<input_private_subnet_ids,private_subnet_ids>>
-|List of IDs of private subnets that the EKS instances will be attached to.
-|`list(string)`
-|n/a
-|yes
-
-|[[input_public_subnet_ids]] <<input_public_subnet_ids,public_subnet_ids>>
-|List of IDs of public subnets the public NLB will be attached to if enabled with 'create_public_nlb'.
-|`list(string)`
-|`[]`
-|no
-
-|[[input_vpc_id]] <<input_vpc_id,vpc_id>>
-|ID of the VPC where the cluster and nodes will be deployed.
-|`string`
-|n/a
-|yes
 
 |===
 
@@ -491,16 +491,16 @@ This variable can be changed on an existing cluster to update it. *Note that thi
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Description
-|[[output_base_domain]] <<output_base_domain,base_domain>> |The base domain for the cluster.
 |[[output_cluster_name]] <<output_cluster_name,cluster_name>> |Name of the EKS cluster.
+|[[output_base_domain]] <<output_base_domain,base_domain>> |The base domain for the cluster.
 |[[output_cluster_oidc_issuer_url]] <<output_cluster_oidc_issuer_url,cluster_oidc_issuer_url>> |The URL on the EKS cluster for the OpenID Connect identity provider
-|[[output_kubernetes]] <<output_kubernetes,kubernetes>> |Kubernetes API endpoint and CA certificate as a structured value.
-|[[output_kubernetes_cluster_ca_certificate]] <<output_kubernetes_cluster_ca_certificate,kubernetes_cluster_ca_certificate>> |Certificate data required to communicate with the cluster.
+|[[output_node_security_group_id]] <<output_node_security_group_id,node_security_group_id>> |ID of the node shared security group
+|[[output_node_groups]] <<output_node_groups,node_groups>> |Map of attribute maps for all node groups created.
 |[[output_kubernetes_host]] <<output_kubernetes_host,kubernetes_host>> |Endpoint for your Kubernetes API server.
+|[[output_kubernetes_cluster_ca_certificate]] <<output_kubernetes_cluster_ca_certificate,kubernetes_cluster_ca_certificate>> |Certificate data required to communicate with the cluster.
 |[[output_kubernetes_token]] <<output_kubernetes_token,kubernetes_token>> |Token to use to authenticate with the cluster.
 |[[output_nlb_target_groups]] <<output_nlb_target_groups,nlb_target_groups>> |List of ARNs of Network LBs (public and/or private if enabled).
-|[[output_node_groups]] <<output_node_groups,node_groups>> |Map of attribute maps for all node groups created.
-|[[output_node_security_group_id]] <<output_node_security_group_id,node_security_group_id>> |ID of the node shared security group
+|[[output_kubernetes]] <<output_kubernetes,kubernetes>> |Kubernetes API endpoint and CA certificate as a structured value.
 |===
 // END_TF_TABLES
 ====
