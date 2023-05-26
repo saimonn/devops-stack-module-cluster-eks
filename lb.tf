@@ -66,33 +66,8 @@ module "nlb_private" {
   enable_cross_zone_load_balancing = true
   internal                         = true
 
-  target_groups = [
-    {
-      name_prefix      = local.nlb_name_prefix
-      backend_protocol = "TCP"
-      backend_port     = 443
-      target_type      = "instance"
-    },
-    {
-      name_prefix      = local.nlb_name_prefix
-      backend_protocol = "TCP"
-      backend_port     = 80
-      target_type      = "instance"
-    },
-  ]
-
-  http_tcp_listeners = [
-    {
-      port               = 443
-      protocol           = "TCP"
-      target_group_index = 0
-    },
-    {
-      port               = 80
-      protocol           = "TCP"
-      target_group_index = 0
-    },
-  ]
+  target_groups      = local.lb_target_groups
+  http_tcp_listeners = local.lb_http_tcp_listeners
 }
 
 resource "aws_route53_record" "wildcard" {
