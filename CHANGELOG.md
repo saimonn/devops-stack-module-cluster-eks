@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v2.0.0...v2.0.1) (2023-05-26)
+
+
+### Bug Fixes
+
+* wrong target group attached to private load balancer on port 80 ([#12](https://github.com/camptocamp/devops-stack-module-cluster-eks/issues/12)) ([81cbaee](https://github.com/camptocamp/devops-stack-module-cluster-eks/commit/81cbaee16160c027f72cae76788776797bc19b14))
+
 ## [2.0.0](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v1.0.0...v2.0.0) (2023-04-25)
 
 
