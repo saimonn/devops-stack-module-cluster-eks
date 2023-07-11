@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v2.0.1...v2.0.2) (2023-07-11)
+
+
+### Documentation
+
+* fix a few typos ([#15](https://github.com/camptocamp/devops-stack-module-cluster-eks/issues/15)) ([2dac66f](https://github.com/camptocamp/devops-stack-module-cluster-eks/commit/2dac66f20633fe89424d9e5604deaadc90540a1b))
+
 ## [2.0.1](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v2.0.0...v2.0.1) (2023-05-26)
 
 
