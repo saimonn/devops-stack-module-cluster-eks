@@ -31,13 +31,11 @@ Here is an example that creates one node group with 3 instances of type `r5a.lar
 
 TIP: You can check out available instance types on the https://aws.amazon.com/ec2/instance-types[official AWS documentation pages].
 
-Depending on the `create_public_nlb` and `create_private_nlb` variales, it creates a public and/or public Network Load Balancer(s). The node groups that have the `target_group_arns = module.my_cluster.nlb_target_groups` value set will be added as backends of the LBs. By default, the LBs only forward traffic on the ports `80` and `443`, but you can customize this using the `extra_lb_target_groups` and `extra_lb_http_tcp_listeners` variables to add other ports. Look at the `lb.tf` file in this module for the syntax.
+Depending on the `create_public_nlb` and `create_private_nlb` variables, it creates a public and/or public Network Load Balancer(s). The node groups that have the `target_group_arns = module.my_cluster.nlb_target_groups` value set will be added as backends of the LBs. By default, the LBs only forward traffic on the ports `80` and `443`, but you can customize this using the `extra_lb_target_groups` and `extra_lb_http_tcp_listeners` variables to add other ports. Look at the `lb.tf` file in this module for the syntax.
 
 This module needs a Route 53 DNS zone in the same AWS account to create a wildcard CNAME record that points to the Network LB. The DNS zone must be passed in the `base_domain` variable. This record is used by other DevOps Stack modules as default URLs for their applications.
 
 == Technical Reference
-
-=== Dependencies
 
 // BEGIN_TF_DOCS
 === Requirements
@@ -60,6 +58,12 @@ The following providers are used by this module:
 
 The following Modules are called:
 
+==== [[module_cluster]] <<module_cluster,cluster>>
+
+Source: terraform-aws-modules/eks/aws
+
+Version: ~> 19.0
+
 ==== [[module_nlb]] <<module_nlb,nlb>>
 
 Source: terraform-aws-modules/alb/aws
@@ -71,12 +75,6 @@ Version: ~> 8.0
 Source: terraform-aws-modules/alb/aws
 
 Version: ~> 8.0
-
-==== [[module_cluster]] <<module_cluster,cluster>>
-
-Source: terraform-aws-modules/eks/aws
-
-Version: ~> 19.0
 
 === Resources
 
@@ -324,9 +322,9 @@ Description: Kubernetes API endpoint and CA certificate as a structured value.
 [cols="a,a,a",options="header,autowidth"]
 |===
 |Name |Source |Version
+|[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~> 19.0
 |[[module_nlb]] <<module_nlb,nlb>> |terraform-aws-modules/alb/aws |~> 8.0
 |[[module_nlb_private]] <<module_nlb_private,nlb_private>> |terraform-aws-modules/alb/aws |~> 8.0
-|[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~> 19.0
 |===
 
 = Resources
