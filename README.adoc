@@ -2,9 +2,9 @@
 
 A https://devops-stack.io/[DevOps Stack] module to deploy a Kubernetes cluster on Amazon Web Services EKS.
 
-This module currently only supports https://docs.aws.amazon.com/eks/latest/userguide/worker.html[self-managed node groups] and not https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html[EKS managed nodes]. It uses the Terraform https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest[module "eks" by AWS] to manage the cluster itself.
+This module creates https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html[EKS managed nodes] by default, bug also supports https://docs.aws.amazon.com/eks/latest/userguide/worker.html[self-managed node groups] by setting the variable `use_self_managed_node_groups` to `true`. It uses the Terraform https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest[module "eks" by AWS] to manage the cluster itself.
 
-The `node_groups` variable is a map of objects. Each value of the map creates a node group referenced by its label. The value object can take any input accepted by the https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest/submodules/self-managed-node-group[self-managed-node-group] submodule.
+The `node_groups` variable is a map of objects. Each value of the map creates a node group referenced by its label. The value object can take any input accepted by the https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest/submodules/eks-managed-node-group[eks-managed-node-group] or https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest/submodules/self-managed-node-group[self-managed-node-group] submodule.
 
 Here is an example that creates one node group with 3 instances of type `r5a.large`, attaches them to the main Load Balancer, and customizes the base EBS volume size to 100 GB:
 
@@ -34,6 +34,12 @@ TIP: You can check out available instance types on the https://aws.amazon.com/ec
 Depending on the `create_public_nlb` and `create_private_nlb` variables, it creates a public and/or public Network Load Balancer(s). The node groups that have the `target_group_arns = module.my_cluster.nlb_target_groups` value set will be added as backends of the LBs. By default, the LBs only forward traffic on the ports `80` and `443`, but you can customize this using the `extra_lb_target_groups` and `extra_lb_http_tcp_listeners` variables to add other ports. Look at the `lb.tf` file in this module for the syntax.
 
 This module needs a Route 53 DNS zone in the same AWS account to create a wildcard CNAME record that points to the Network LB. The DNS zone must be passed in the `base_domain` variable. This record is used by other DevOps Stack modules as default URLs for their applications.
+
+== Upgrading from versions earlier than 3.x
+
+The versions 2.x and earlier of this module created https://docs.aws.amazon.com/eks/latest/userguide/worker.html[self-managed node groups] exclusively. Upgrading to versions 3.x or later requires setting the variable `use_self_managed_node_groups` to `true` to avoid breaking existing clusters.
+
+Switching an existing cluster to EKS managed node groups is possible, but requires manually draining the existing nodes after the new node group is created and before the old one is destroyed (by doing a `terraform apply -target <resource>` in multiple steps) as well as manually adding the new node group to the Load Balancer.
 
 == Technical Reference
 
@@ -204,6 +210,20 @@ Type: `any`
 
 Default: `{}`
 
+==== [[input_use_self_managed_node_groups]] <<input_use_self_managed_node_groups,use_self_managed_node_groups>>
+
+Description: Whether to use self-managed node groups instead of EKS managed node groups.
+
+EKS managed node groups have the advantage of automatically draining the nodes when instances are being replaced.
+
+**You should set this variable to `true` on clusters deployed with a module earlier than v3 because it created self-managed node groups exclusively.**
+
+Changing this on an existing cluster is not supported (although it is possible with some downtime and manual fixes to the load balancer target groups).
+
+Type: `bool`
+
+Default: `false`
+
 ==== [[input_create_public_nlb]] <<input_create_public_nlb,create_public_nlb>>
 
 Description: Whether to create an internet-facing NLB attached to the public subnets
@@ -322,9 +342,9 @@ Description: Kubernetes API endpoint and CA certificate as a structured value.
 [cols="a,a,a",options="header,autowidth"]
 |===
 |Name |Source |Version
-|[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~> 19.0
 |[[module_nlb]] <<module_nlb,nlb>> |terraform-aws-modules/alb/aws |~> 8.0
 |[[module_nlb_private]] <<module_nlb_private,nlb_private>> |terraform-aws-modules/alb/aws |~> 8.0
+|[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~> 19.0
 |===
 
 = Resources
@@ -444,6 +464,19 @@ list(object({
 |A map of node group configurations to be created.
 |`any`
 |`{}`
+|no
+
+|[[input_use_self_managed_node_groups]] <<input_use_self_managed_node_groups,use_self_managed_node_groups>>
+|Whether to use self-managed node groups instead of EKS managed node groups.
+
+EKS managed node groups have the advantage of automatically draining the nodes when instances are being replaced.
+
+**You should set this variable to `true` on clusters deployed with a module earlier than v3 because it created self-managed node groups exclusively.**
+
+Changing this on an existing cluster is not supported (although it is possible with some downtime and manual fixes to the load balancer target groups).
+
+|`bool`
+|`false`
 |no
 
 |[[input_create_public_nlb]] <<input_create_public_nlb,create_public_nlb>>

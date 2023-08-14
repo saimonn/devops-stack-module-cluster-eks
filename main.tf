@@ -27,16 +27,20 @@ module "cluster" {
   subnet_ids  = var.private_subnet_ids
   enable_irsa = true
 
-  create_aws_auth_configmap = true
+  create_aws_auth_configmap = var.use_self_managed_node_groups
   manage_aws_auth_configmap = true
 
   aws_auth_accounts = var.aws_auth_accounts
   aws_auth_roles    = var.aws_auth_roles
   aws_auth_users    = var.aws_auth_users
 
-  self_managed_node_groups = var.node_groups
+  eks_managed_node_groups  = var.use_self_managed_node_groups ? {} : var.node_groups
+  self_managed_node_groups = var.use_self_managed_node_groups ? var.node_groups : {}
 
   self_managed_node_group_defaults = {
+    create_security_group = false
+  }
+  eks_managed_node_group_defaults = {
     create_security_group = false
   }
 

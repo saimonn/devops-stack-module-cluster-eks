@@ -79,6 +79,20 @@ variable "node_groups" {
   default     = {}
 }
 
+variable "use_self_managed_node_groups" {
+  description = <<-EOT
+    Whether to use self-managed node groups instead of EKS managed node groups.
+
+    EKS managed node groups have the advantage of automatically draining the nodes when instances are being replaced.
+
+    **You should set this variable to `true` on clusters deployed with a module earlier than v3 because it created self-managed node groups exclusively.**
+
+    Changing this on an existing cluster is not supported (although it is possible with some downtime and manual fixes to the load balancer target groups).
+  EOT
+  type        = bool
+  default     = false
+}
+
 variable "create_public_nlb" {
   description = "Whether to create an internet-facing NLB attached to the public subnets"
   type        = bool
