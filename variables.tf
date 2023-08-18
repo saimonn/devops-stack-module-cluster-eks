@@ -15,14 +15,16 @@ variable "base_domain" {
 
 variable "kubernetes_version" {
   description = <<-EOT
-    Kubernetes version for the EKS cluster.
+    Kubernetes `<major>.<minor>` version to use for the EKS cluster.
 
-    Please check the https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] to find the available versions.
+    See https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] for a list of available versions.
 
-    This variable can be changed on an existing cluster to update it. *Note that this triggers an "instance refresh" on the nodes' auto scaling group, and so will recreate all pods running on the cluster*.
+    If you do not specify a value, the latest available version at creation is used and no upgrades will occur except those automatically triggered by EKS.
+
+    The value can be set and increased on an existing cluster to upgrade it. *Note that this triggers a rolling replacement of the compute nodes, so all pods will be recreated*.
   EOT
   type        = string
-  default     = "1.25"
+  default     = null
 }
 
 variable "cluster_endpoint_public_access_cidrs" {

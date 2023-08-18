@@ -130,15 +130,17 @@ Default: `null`
 
 ==== [[input_kubernetes_version]] <<input_kubernetes_version,kubernetes_version>>
 
-Description: Kubernetes version for the EKS cluster.
+Description: Kubernetes `<major>.<minor>` version to use for the EKS cluster.
 
-Please check the https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] to find the available versions.
+See https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] for a list of available versions.
 
-This variable can be changed on an existing cluster to update it. *Note that this triggers an "instance refresh" on the nodes' auto scaling group, and so will recreate all pods running on the cluster*.
+If you do not specify a value, the latest available version at creation is used and no upgrades will occur except those automatically triggered by EKS.
+
+The value can be set and increased on an existing cluster to upgrade it. *Note that this triggers a rolling replacement of the compute nodes, so all pods will be recreated*.
 
 Type: `string`
 
-Default: `"1.25"`
+Default: `null`
 
 ==== [[input_cluster_endpoint_public_access_cidrs]] <<input_cluster_endpoint_public_access_cidrs,cluster_endpoint_public_access_cidrs>>
 
@@ -342,9 +344,9 @@ Description: Kubernetes API endpoint and CA certificate as a structured value.
 [cols="a,a,a",options="header,autowidth"]
 |===
 |Name |Source |Version
+|[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~> 19.0
 |[[module_nlb]] <<module_nlb,nlb>> |terraform-aws-modules/alb/aws |~> 8.0
 |[[module_nlb_private]] <<module_nlb_private,nlb_private>> |terraform-aws-modules/alb/aws |~> 8.0
-|[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~> 19.0
 |===
 
 = Resources
@@ -380,14 +382,16 @@ This module needs a Route 53 zone matching this variable with permission to crea
 |no
 
 |[[input_kubernetes_version]] <<input_kubernetes_version,kubernetes_version>>
-|Kubernetes version for the EKS cluster.
+|Kubernetes `<major>.<minor>` version to use for the EKS cluster.
 
-Please check the https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] to find the available versions.
+See https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[AWS EKS documentation] for a list of available versions.
 
-This variable can be changed on an existing cluster to update it. *Note that this triggers an "instance refresh" on the nodes' auto scaling group, and so will recreate all pods running on the cluster*.
+If you do not specify a value, the latest available version at creation is used and no upgrades will occur except those automatically triggered by EKS.
+
+The value can be set and increased on an existing cluster to upgrade it. *Note that this triggers a rolling replacement of the compute nodes, so all pods will be recreated*.
 
 |`string`
-|`"1.25"`
+|`null`
 |no
 
 |[[input_cluster_endpoint_public_access_cidrs]] <<input_cluster_endpoint_public_access_cidrs,cluster_endpoint_public_access_cidrs>>
