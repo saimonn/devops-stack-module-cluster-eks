@@ -34,8 +34,8 @@ module "cluster" {
   aws_auth_roles    = var.aws_auth_roles
   aws_auth_users    = var.aws_auth_users
 
-  eks_managed_node_groups  = var.use_self_managed_node_groups ? {} : var.node_groups
-  self_managed_node_groups = var.use_self_managed_node_groups ? var.node_groups : {}
+  eks_managed_node_groups  = { for k, v in var.node_groups : k => v if !var.use_self_managed_node_groups }
+  self_managed_node_groups = { for k, v in var.node_groups : k => v if var.use_self_managed_node_groups }
 
   self_managed_node_group_defaults = {
     create_security_group = false
