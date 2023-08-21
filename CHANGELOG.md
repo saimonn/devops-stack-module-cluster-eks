@@ -1,5 +1,22 @@
 # Changelog
 
+## [3.0.0](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v2.0.2...v3.0.0) (2023-08-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* switch to EKS managed node groups by default ([#17](https://github.com/camptocamp/devops-stack-module-cluster-eks/issues/17))
+
+### Features
+
+* rely on `aws_eks_cluster` resource `version` default ([#20](https://github.com/camptocamp/devops-stack-module-cluster-eks/issues/20)) ([65dd9ec](https://github.com/camptocamp/devops-stack-module-cluster-eks/commit/65dd9ec192606ff03c11bd6f79f91253250e8987))
+* switch to EKS managed node groups by default ([#17](https://github.com/camptocamp/devops-stack-module-cluster-eks/issues/17)) ([1f81e38](https://github.com/camptocamp/devops-stack-module-cluster-eks/commit/1f81e38397fce3957deedbc0dfe152737537393a))
+
+
+### Bug Fixes
+
+* autoscaling groups to NLBs attachment ([#19](https://github.com/camptocamp/devops-stack-module-cluster-eks/issues/19)) ([2c02776](https://github.com/camptocamp/devops-stack-module-cluster-eks/commit/2c0277614adc9407f9e9cc28f9b53964183f18e7))
+
 ## [2.0.2](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v2.0.1...v2.0.2) (2023-07-11)
 
 
