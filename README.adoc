@@ -81,17 +81,17 @@ The following providers are used by this module:
 
 The following Modules are called:
 
-==== [[module_nlb]] <<module_nlb,nlb>>
-
-Source: terraform-aws-modules/alb/aws
-
-Version: ~> 8.0
-
 ==== [[module_cluster]] <<module_cluster,cluster>>
 
 Source: terraform-aws-modules/eks/aws
 
 Version: ~> 19.0
+
+==== [[module_nlb]] <<module_nlb,nlb>>
+
+Source: terraform-aws-modules/alb/aws
+
+Version: ~> 8.0
 
 ==== [[module_nlb_private]] <<module_nlb_private,nlb_private>>
 
@@ -109,6 +109,7 @@ The following resources are used by this module:
 - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region[aws_region.current] (data source)
 - https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/route53_zone[aws_route53_zone.this] (data source)
 - https://registry.terraform.io/providers/hashicorp/dns/latest/docs/data-sources/a_record_set[dns_a_record_set.nlb] (data source)
+- https://registry.terraform.io/providers/hashicorp/dns/latest/docs/data-sources/a_record_set[dns_a_record_set.nlb_private] (data source)
 
 === Required Inputs
 
@@ -362,9 +363,9 @@ Description: Kubernetes API endpoint and CA certificate as a structured value.
 [cols="a,a,a",options="header,autowidth"]
 |===
 |Name |Source |Version
-|[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~> 19.0
 |[[module_nlb]] <<module_nlb,nlb>> |terraform-aws-modules/alb/aws |~> 8.0
 |[[module_nlb_private]] <<module_nlb_private,nlb_private>> |terraform-aws-modules/alb/aws |~> 8.0
+|[[module_cluster]] <<module_cluster,cluster>> |terraform-aws-modules/eks/aws |~> 19.0
 |===
 
 = Resources
@@ -378,6 +379,7 @@ Description: Kubernetes API endpoint and CA certificate as a structured value.
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region[aws_region.current] |data source
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/route53_zone[aws_route53_zone.this] |data source
 |https://registry.terraform.io/providers/hashicorp/dns/latest/docs/data-sources/a_record_set[dns_a_record_set.nlb] |data source
+|https://registry.terraform.io/providers/hashicorp/dns/latest/docs/data-sources/a_record_set[dns_a_record_set.nlb_private] |data source
 |===
 
 = Inputs

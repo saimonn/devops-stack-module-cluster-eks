@@ -83,7 +83,13 @@ resource "aws_route53_record" "wildcard" {
 }
 
 data "dns_a_record_set" "nlb" {
-  host = module.nlb.lb_dns_name
+  count = var.create_public_nlb ? 1 : 0
+  host  = module.nlb.lb_dns_name
+}
+
+data "dns_a_record_set" "nlb_private" {
+  count = var.create_private_nlb ? 1 : 0
+  host  = module.nlb_private.lb_dns_name
 }
 
 
