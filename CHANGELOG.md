@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v3.0.0...v3.0.1) (2023-11-02)
+
+
+### Bug Fixes
+
+* tf error when create_public_nlb is false ([#21](https://github.com/camptocamp/devops-stack-module-cluster-eks/issues/21)) ([5568923](https://github.com/camptocamp/devops-stack-module-cluster-eks/commit/5568923c88de59dbbb2d71e5a8a9bda214651137))
+
 ## [3.0.0](https://github.com/camptocamp/devops-stack-module-cluster-eks/compare/v2.0.2...v3.0.0) (2023-08-21)
 
 
